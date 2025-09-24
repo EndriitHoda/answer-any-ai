@@ -167,13 +167,16 @@ export const CallInterface = () => {
       try {
         if (!streamRef.current || !aiServices) return;
         
+        // Check if we're already processing to avoid overlapping
+        if (isProcessing) return;
+        
         setIsProcessing(true);
         
-        // Record 3 seconds of audio
-        const audioBlob = await recordAudio(streamRef.current, 3000);
+        // Record 2 seconds of audio for faster response
+        const audioBlob = await recordAudio(streamRef.current, 2000);
         
         // Skip if audio is too small (likely silence)
-        if (audioBlob.size < 1000) {
+        if (audioBlob.size < 800) {
           setIsProcessing(false);
           return;
         }
@@ -182,7 +185,7 @@ export const CallInterface = () => {
         const transcript = await aiServices.speechToText(audioBlob);
         
         // Skip if transcript is too short or empty
-        if (!transcript || transcript.trim().length < 5) {
+        if (!transcript || transcript.trim().length < 3) {
           setIsProcessing(false);
           return;
         }
@@ -194,7 +197,7 @@ export const CallInterface = () => {
         console.error('Error processing audio:', error);
         setIsProcessing(false);
       }
-    }, 5000); // Record every 5 seconds
+    }, 3000); // Record every 3 seconds for faster response
   };
 
   const processCustomerMessage = async (customerMessage: string) => {
@@ -349,8 +352,8 @@ export const CallInterface = () => {
               />
               
               {isProcessing && (
-                <div className="text-sm text-muted-foreground">
-                  Processing audio...
+                <div className="text-sm text-muted-foreground animate-pulse">
+                  Listening and processing...
                 </div>
               )}
             </div>

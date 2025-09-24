@@ -73,10 +73,10 @@ Respond naturally as a customer service agent would.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: messages,
-        max_tokens: 150,
-        temperature: 0.7,
+        max_tokens: 100,
+        temperature: 0.8,
         presence_penalty: 0.6,
       }),
     });
