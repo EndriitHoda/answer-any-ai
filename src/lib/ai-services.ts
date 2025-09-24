@@ -8,8 +8,40 @@ export interface ApiKeys {
 export class AIServices {
   private apiKeys: ApiKeys;
 
+  // Predefined responses for specific questions
+  private predefinedResponses = {
+    "hours": "We're open Monday through Friday, 9 AM to 6 PM Eastern Time. We're closed on weekends and holidays.",
+    "return": "We offer a 30-day return policy for all items. Items must be in original condition with receipt. Free return shipping is included.",
+    "tracking": "You can track your order using the tracking number sent to your email, or log into your account on our website to view real-time updates."
+  };
+
   constructor(apiKeys: ApiKeys) {
     this.apiKeys = apiKeys;
+  }
+
+  // Detect which of the 3 supported questions is being asked
+  private detectQuestion(message: string): string | null {
+    const normalizedMessage = message.toLowerCase().trim();
+    
+    // Check for hours-related questions
+    if ((normalizedMessage.includes('hour') || normalizedMessage.includes('open') || normalizedMessage.includes('time') || normalizedMessage.includes('when')) &&
+        (normalizedMessage.includes('what') || normalizedMessage.includes('when') || normalizedMessage.includes('your'))) {
+      return "hours";
+    }
+    
+    // Check for return policy questions
+    if ((normalizedMessage.includes('return') || normalizedMessage.includes('refund') || normalizedMessage.includes('policy')) &&
+        (normalizedMessage.includes('what') || normalizedMessage.includes('how') || normalizedMessage.includes('your'))) {
+      return "return";
+    }
+    
+    // Check for order tracking questions
+    if ((normalizedMessage.includes('track') || normalizedMessage.includes('order') || normalizedMessage.includes('shipping') || normalizedMessage.includes('package')) &&
+        (normalizedMessage.includes('how') || normalizedMessage.includes('where') || normalizedMessage.includes('my'))) {
+      return "tracking";
+    }
+    
+    return null;
   }
 
   // Convert audio blob to text using OpenAI Whisper
@@ -40,54 +72,19 @@ export class AIServices {
     return result.text;
   }
 
-  // Generate AI response using OpenAI GPT-4
+  // Generate AI response - Fast responses for 3 specific questions
   async generateResponse(customerMessage: string, conversationHistory: Array<{role: string, content: string}>): Promise<string> {
-    if (!this.apiKeys.openaiKey) {
-      throw new Error('OpenAI API key not configured');
+    console.log('Processing message:', customerMessage);
+    
+    // Check if this is one of our 3 supported questions for instant response
+    const detectedQuestion = this.detectQuestion(customerMessage);
+    if (detectedQuestion && this.predefinedResponses[detectedQuestion]) {
+      console.log(`Fast response for: ${detectedQuestion}`);
+      return this.predefinedResponses[detectedQuestion];
     }
 
-    const systemPrompt = `You are a professional customer service agent for a technology company. You are helpful, polite, and efficient.
-
-Guidelines:
-- Keep responses concise and friendly
-- Ask clarifying questions when needed
-- Offer solutions proactively
-- Always maintain a professional tone
-- If you cannot help with something, explain what you can help with instead
-- End conversations appropriately when the customer's issue is resolved
-
-The customer has just said: "${customerMessage}"
-
-Respond naturally as a customer service agent would.`;
-
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...conversationHistory,
-      { role: 'user', content: customerMessage }
-    ];
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKeys.openaiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: messages,
-        max_tokens: 100,
-        temperature: 0.8,
-        presence_penalty: 0.6,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${error}`);
-    }
-
-    const result = await response.json();
-    return result.choices[0].message.content;
+    // For any other questions, guide them to the 3 supported topics
+    return "Hi! I can help you with three main topics: our business hours, return policy, or order tracking. Please ask me about one of those and I'll give you a quick answer!";
   }
 
   // Convert text to speech using ElevenLabs
