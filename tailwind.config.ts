@@ -47,6 +47,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        call: {
+          active: "hsl(var(--call-active))",
+          inactive: "hsl(var(--call-inactive))",
+          muted: "hsl(var(--call-muted))",
+        },
+        waveform: "hsl(var(--waveform))",
+        "agent-message": "hsl(var(--agent-message))",
+        "customer-message": "hsl(var(--customer-message))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -62,6 +70,14 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-glow": "var(--gradient-glow)",
+      },
+      boxShadow: {
+        "glow": "var(--shadow-glow)",
+        "card": "var(--shadow-card)",
       },
       keyframes: {
         "accordion-down": {
